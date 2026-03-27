@@ -1,0 +1,75 @@
+### Variables
+@baseUrl = http://localhost:3000
+@contentType = application/json
+
+### The basic request
+#http://{{baseUrl}}
+
+### Get all tasks 
+GET {{baseUrl}}/tasks
+
+### Get one task
+GET {{baseUrl}}
+
+###################
+
+GET {{baseUrl}}/1
+
+### Create new task
+# @name createTask
+POST {{baseUrl}}/users-controller/users
+Content-Type: {{contentType}}
+
+{
+  "username": "Learn NestJS",
+  "password": "Complete the NestJS course"
+  
+}
+
+####################
+PATCH {{baseUrl}}/1
+Content-Type: {{contentType}}
+
+{
+  "username": "Learn NestJS",
+  "password": "Complete the NestJS course"
+  
+}
+#######################
+
+DELETE {{baseUrl}}/1
+
+
+##########################
+
+POST {{baseUrl}}/users
+Content-Type: {{contentType}} 
+
+{
+  "name": "Jane Doe",
+  "email": "jane@example.com",
+  "password": "securePassword123",
+  "age": 25
+}
+### Set the task id
+#@taskId = {{ createTask.response.body.id }}
+
+### Validation error - status is incorrect
+# POST {{baseUrl}}/tasks
+# Content-Type: {{contentType}}
+
+# {
+#   "description": "Complete the NestJS course",
+#   "status": "XXX"
+# }
+
+# ### Update the task status
+# PATCH {{baseUrl}}/tasks/{{taskId}}
+# Content-Type: {{contentType}}
+
+# {
+#   "status": "IN_PROGRESS"
+# }
+
+# ### Deleting a task
+# DELETE {{ baseUrl }}/tasks/{{taskId}}
