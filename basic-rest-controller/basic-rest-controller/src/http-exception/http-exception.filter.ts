@@ -1,16 +1,31 @@
-import { ArgumentsHost, Catch, ExceptionFilter, HttpException } from '@nestjs/common';
-import { Response } from 'express';
+import {
+  ArgumentsHost,
+  Catch,
+  ExceptionFilter,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
+import { Request, Response } from 'express';
+import { CloudLoggerService } from '../common/logging/cloud-logger.service';
 
 @Catch()
 export class HttpExceptionFilter<T> implements ExceptionFilter {
-  catch(exception: HttpException, host: ArgumentsHost) {
+  constructor(
+    private readonly logger: CloudLoggerService = new CloudLoggerService(),
+  ) {}
+
+  catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
-    const status = exception.getStatus();
-    const exceptionResponse = exception.getResponse(); // Get the default exception response
+    const isHttpException = exception instanceof HttpException;
+    const status = isHttpException
+      ? exception.getStatus()
+      : HttpStatus.INTERNAL_SERVER_ERROR;
+    const exceptionResponse = isHttpException
+      ? exception.getResponse()
+      : 'Internal server error';
 
-    // Customize the response body
     const errorResponse = {
       statusCode: status,
       isSuccess: false,
@@ -23,7 +38,17 @@ export class HttpExceptionFilter<T> implements ExceptionFilter {
         ? (exceptionResponse as any).error || 'Error occurred'
         : 'Error occurred',
     };
-    console.error('Exception caught by filter:', errorResponse); // Log the error for debugging
+
+    this.logger.logException({
+      requestId: response.getHeader('x-request-id') ?? null,
+      method: request.method,
+      path: request.url,
+      statusCode: status,
+      error: errorResponse.error,
+      message: errorResponse.message,
+      stack: exception instanceof Error ? exception.stack : undefined,
+    });
+
     response.status(status).json(errorResponse);
   }
 }
